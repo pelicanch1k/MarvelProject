@@ -7,18 +7,24 @@ import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
 
 class RandomChar extends Component {
-    constructor(props){
-        super(props);
+    state = {
+        char: {},
+        loading: true,
+        error: false,
+        first: true
+    }
 
-        this.state = {
-            char: {},
-            loading: true,
-            error: false
-        }
-    
-        this.marvelService = new MarvelService();
+    marvelService = new MarvelService();
 
+    componentDidMount = () => {
         this.updateChar();
+    }
+
+    componentDidUpdate = (prevProps, prevState) => {
+        if (prevState.char.name === this.state.char.name) {
+            console.log("тот же элемент")
+            this.updateChar()
+        }
     }
 
     onError = () => {
@@ -31,7 +37,9 @@ class RandomChar extends Component {
     onCharLoaded = (char) => {
         this.setState({
             char, 
-            loading: false})
+            loading: false,
+            error: false
+        })
     }
 
     updateChar = () => {
@@ -40,7 +48,7 @@ class RandomChar extends Component {
         this.marvelService
         .getCharacter(id)
         .then(this.onCharLoaded)
-        .catch(this.onError)
+        .catch(this.updateChar)
     }
 
     render() {
@@ -67,7 +75,7 @@ class RandomChar extends Component {
                     <p className="randomchar__title">
                         Or choose another one
                     </p>
-                    <button className="button button__main">
+                    <button className="button button__main" onClick={this.updateChar}>
                         <div className="inner">try it</div>
                     </button>
                     <img src={mjolnir} alt="mjolnir" className="randomchar__decoration"/>
@@ -79,10 +87,15 @@ class RandomChar extends Component {
 
 const View = ({char}) => {
     const {name, description, src, homepage, wiki} = char;
+    let style = {objectFit: "cover"}
+
+    if (src.indexOf("image_not_available.jpg") !== -1){
+        style.objectFit = "contain"
+    }
 
     return (
         <div className="randomchar__block">
-            <img src={src} alt="Random character" className="randomchar__img"/>
+            <img style={style} src={src} alt="Random character" className="randomchar__img"/>
             <div className="randomchar__info">
                 <p className="randomchar__name">{name}</p>
                 <p className="randomchar__descr">

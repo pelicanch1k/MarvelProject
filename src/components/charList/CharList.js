@@ -14,50 +14,37 @@ class CharList extends Component {
         }
     }
 
-    createItems = () => {
-        // const arr = [] 
+    createItem = (char, index) => {
+        let {name, desc, src} = char
 
-        // this._marvelService.getAllCharacters(9).then(res => {
-        //     res.data.results.forEach(item => {
-        //         arr.push(
-        //             <li className="char__item">
-        //                 <img src={abyss} alt="abyss"/>
-        //                 <div className="char__name">{item.name}</div>
-        //             </li>
-        //         )
-        //     })
-        // })
-
-        const arr = []
-
-        this._marvelService.getAllCharacters(9).then(res => {
-            return res.data.results
-        }).then(results => {
-            arr.push(results)
-        })
-
-        while (arr.length === 0){
-            console.log(1)
+        if (src.indexOf("image_not_available.jpg") !== -1){
+            src = abyss
         }
-        return 
-    }
 
-    createItem = (name) => {
         return (
-            <li className="char__item">
-                <img src={abyss} alt="abyss"/>
+            <li key={index} className="char__item">
+                <img src={src} alt={name} />
                 <div className="char__name">{name}</div>
             </li>
     )}
 
+    componentDidMount = () => {
+        this._marvelService.getAllCharacters(9).then(res => {
+            return res.map(this.createItem)
+        }).then(marvelCharacters => this.setState({marvelCharacters}))
+    }
+
     render() {
+        const {marvelCharacters} = this.state  
+
         return (
             <div className="char__list">
                 <ul className="char__grid">
-                    <li className="char__item">
+                    {marvelCharacters}
+                    {/* <li className="char__item">
                         <img src={abyss} alt="abyss"/>
                         <div className="char__name">Abyss</div>
-                    </li>
+                    </li> */}
                 </ul>
                 <button className="button button__main button__long">
                     <div className="inner">load more</div>
