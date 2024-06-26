@@ -8,22 +8,26 @@ import mjolnir from '../../resources/img/mjolnir.png';
 
 class RandomChar extends Component {
     state = {
+        oldChar: {},
         char: {},
         loading: true,
-        error: false,
-        first: true
+        error: false
     }
 
     marvelService = new MarvelService();
 
-    componentDidMount = () => {
+    componentDidMount = () => { 
         this.updateChar();
     }
 
     componentDidUpdate = (prevProps, prevState) => {
-        if (prevState.char.name === this.state.char.name) {
-            console.log("тот же элемент")
-            this.updateChar()
+        const name = this.state.char.name;
+        const oldName = this.state.oldChar.name;
+
+        if (name && oldName){
+            if (name === oldName){
+                this.updateChar();
+            }
         }
     }
 
@@ -36,19 +40,31 @@ class RandomChar extends Component {
 
     onCharLoaded = (char) => {
         this.setState({
-            char, 
+            char,
             loading: false,
             error: false
         })
     }
 
+    onCharLoading = () => {
+        this.setState(state => {
+            return {
+                char: {},
+                oldChar: state.char,
+                loading: true,
+                error: false
+            }
+        })
+    }
+
     updateChar = () => {
-        const id = Math.floor(Math.random() * (1011400 - 1011440) + 1011440) 
+        const id = Math.floor(Math.random() * (1011400 - 1011410) + 1011410) 
+        this.onCharLoading()
 
         this.marvelService
         .getCharacter(id)
         .then(this.onCharLoaded)
-        .catch(this.updateChar)
+        .catch(this.onError)
     }
 
     render() {

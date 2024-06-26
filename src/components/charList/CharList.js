@@ -1,4 +1,6 @@
 import {Component} from 'react';
+
+import Spinner from '../spiner/Spinner';
 import MarvelService from '../../services/MarvelService';
 
 import './charList.scss';
@@ -10,19 +12,22 @@ class CharList extends Component {
 
         this._marvelService = new MarvelService();
         this.state = {
-            marvelCharacters: []
+            marvelCharacters: null
         }
     }
 
     createItem = (char, index) => {
-        let {name, desc, src} = char
+        let {name, description, src, id} = char
 
         if (src.indexOf("image_not_available.jpg") !== -1){
             src = abyss
         }
 
         return (
-            <li key={index} className="char__item">
+            <li 
+            key={id} 
+            className="char__item"
+            onClick={() => this.props.onCharSelected(id)}>
                 <img src={src} alt={name} />
                 <div className="char__name">{name}</div>
             </li>
@@ -35,16 +40,12 @@ class CharList extends Component {
     }
 
     render() {
-        const {marvelCharacters} = this.state  
+        const {marvelCharacters} = this.state
 
         return (
             <div className="char__list">
                 <ul className="char__grid">
-                    {marvelCharacters}
-                    {/* <li className="char__item">
-                        <img src={abyss} alt="abyss"/>
-                        <div className="char__name">Abyss</div>
-                    </li> */}
+                    {!marvelCharacters ? <Spinner/> : marvelCharacters}
                 </ul>
                 <button className="button button__main button__long">
                     <div className="inner">load more</div>
