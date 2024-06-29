@@ -1,23 +1,59 @@
 import {Component} from 'react';
 
 import Spinner from '../spiner/Spinner';
+import ErrorMessage from '../errorMessage/ErrorMessage';
+
 import MarvelService from '../../services/MarvelService';
 
 import './charList.scss';
 import abyss from '../../resources/img/abyss.jpg';
 
 class CharList extends Component {
-    constructor(props) {
-        super(props);
-
-        this._marvelService = new MarvelService();
-        this.state = {
-            marvelCharacters: null
-        }
+    state = {
+        marvelCharacters: [],
+        error: false,
+        loading: false,
+        offset: 1541,
+        charEnded: false
     }
 
-    createItem = (char, index) => {
-        let {name, description, src, id} = char
+    _marvelService = new MarvelService();
+
+    componentDidMount = () => {
+        this.onRequest()
+    }
+
+    onRequest = () => {
+        this.onCharListLoading();
+
+        this._marvelService.getAllCharacters(this.state.offset)
+        .then(this.onCharListLoaded)
+        .catch(this.onError)
+    }
+
+    onCharListLoading = () => {
+        this.setState({
+            loading: true
+        })
+    }
+
+    onCharListLoaded = (newMarvelCharacters) => {
+        console.log(newMarvelCharacters)
+
+        this.setState(({marvelCharacters, offset}) => ({    
+            marvelCharacters: [...marvelCharacters, ...newMarvelCharacters],
+            loading: false,
+            offset: offset + 9,
+            charEnded: newMarvelCharacters.length < 9 ? true : false
+        }))
+    }
+
+    onError = () => {
+        this.setState({error: true})
+    }
+
+    createItem = (char) => {
+        let {name, src, id} = char
 
         if (src.indexOf("image_not_available.jpg") !== -1){
             src = abyss
@@ -33,21 +69,23 @@ class CharList extends Component {
             </li>
     )}
 
-    componentDidMount = () => {
-        this._marvelService.getAllCharacters(9).then(res => {
-            return res.map(this.createItem)
-        }).then(marvelCharacters => this.setState({marvelCharacters}))
-    }
-
     render() {
-        const {marvelCharacters} = this.state
+        const {marvelCharacters, error, loading, charEnded} = this.state
+
+        if (error){
+            return <ErrorMessage/>
+        }
 
         return (
             <div className="char__list">
                 <ul className="char__grid">
-                    {!marvelCharacters ? <Spinner/> : marvelCharacters}
+                    {!marvelCharacters ? <Spinner/> : marvelCharacters.map(this.createItem)}
                 </ul>
-                <button className="button button__main button__long">
+                <button
+                className="button button__main button__long"
+                disabled={loading}
+                style={{"display": charEnded ? "none" : "block"}}
+                onClick={this.onRequest}>
                     <div className="inner">load more</div>
                 </button>
             </div>
