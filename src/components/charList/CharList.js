@@ -13,14 +13,56 @@ class CharList extends Component {
         marvelCharacters: [],
         error: false,
         loading: false,
-        offset: 1541,
+        offset: 210,
         charEnded: false
     }
 
     _marvelService = new MarvelService();
 
+    checkPosition = () => {
+        // Высота документа и экрана
+        const height = document.body.offsetHeight
+        const screenHeight = window.innerHeight
+      
+        // Сколько пикселей уже проскроллили
+        const scrolled = window.scrollY
+      
+        // Порог
+        const threshold = height - screenHeight / 4
+        // console.log(threshold)
+      
+        // Низ экрана относительно страницы
+        const position = scrolled + screenHeight
+        // console.log(position)
+      
+        if (position >= threshold) {
+            this.onRequest()
+        }
+      }
+
+    throttle(callee, timeout) {
+        let timer = null
+
+        return function perform(...args) {
+          if (timer) return
+
+          timer = setTimeout(() => {
+            callee(...args)
+
+            clearTimeout(timer)
+            timer = null
+          }, timeout)
+
+        }
+      }
+
     componentDidMount = () => {
         this.onRequest()
+        const {throttle, checkPosition} = this
+        
+        setTimeout(() => {
+            window.addEventListener("scroll", throttle(checkPosition, 1000))
+        }, 1000)
     }
 
     onRequest = () => {
@@ -38,8 +80,6 @@ class CharList extends Component {
     }
 
     onCharListLoaded = (newMarvelCharacters) => {
-        console.log(newMarvelCharacters)
-
         this.setState(({marvelCharacters, offset}) => ({    
             marvelCharacters: [...marvelCharacters, ...newMarvelCharacters],
             loading: false,
