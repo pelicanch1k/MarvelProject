@@ -1,4 +1,5 @@
-import {Component} from 'react';
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 
 import Spinner from '../spiner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
@@ -14,56 +15,24 @@ class CharList extends Component {
         error: false,
         loading: false,
         offset: 210,
-        charEnded: false
+        charEnded: false,
+        refID: null,
+        oldId: null
     }
 
     _marvelService = new MarvelService();
 
-    checkPosition = () => {
-        // Высота документа и экрана
-        const height = document.body.offsetHeight
-        const screenHeight = window.innerHeight
-      
-        // Сколько пикселей уже проскроллили
-        const scrolled = window.scrollY
-      
-        // Порог
-        const threshold = height - screenHeight / 4
-        // console.log(threshold)
-      
-        // Низ экрана относительно страницы
-        const position = scrolled + screenHeight
-        // console.log(position)
-      
-        if (position >= threshold) {
-            this.onRequest()
-        }
-      }
-
-    throttle(callee, timeout) {
-        let timer = null
-
-        return function perform(...args) {
-          if (timer) return
-
-          timer = setTimeout(() => {
-            callee(...args)
-
-            clearTimeout(timer)
-            timer = null
-          }, timeout)
-
-        }
-      }
+    setRef = elem => {
+        this.myRef = elem
+    }
 
     componentDidMount = () => {
         this.onRequest()
-        const {throttle, checkPosition} = this
-        
-        setTimeout(() => {
-            window.addEventListener("scroll", throttle(checkPosition, 1000))
-        }, 1000)
     }
+
+    // componentDidUpdate = (prevProps, prevState) => {
+    //     // this.myRef?.classList.add("char__item_selected")
+    // }
 
     onRequest = () => {
         this.onCharListLoading();
@@ -92,22 +61,43 @@ class CharList extends Component {
         this.setState({error: true})
     }
 
-    createItem = (char) => {
+    onCharSelected = (id) => {
+        this.setState({refID: id})
+        this.props.onCharSelected(id)
+    }
+
+    createItem = (char, index) => {
         let {name, src, id} = char
 
         if (src.indexOf("image_not_available.jpg") !== -1){
             src = abyss
         }
 
-        return (
-            <li 
-            key={id} 
-            className="char__item"
-            onClick={() => this.props.onCharSelected(id)}>
-                <img src={src} alt={name} />
-                <div className="char__name">{name}</div>
-            </li>
-    )}
+
+        if (id == this.state.refID){
+            return (
+                <li
+                ref={this.setRef}
+                key={id} 
+                className="char__item char__item_selected"
+                tabIndex={0}>
+                    <img src={src} alt={name} />
+                    <div className="char__name">{name}</div>
+                </li>
+            )
+        } else {
+            return (
+                <li
+                key={id} 
+                className="char__item"
+                tabIndex={0}
+                onClick={() => this.onCharSelected(id)}>
+                    <img src={src} alt={name} />
+                    <div className="char__name">{name}</div>
+                </li>
+            )
+        }
+    }
 
     render() {
         const {marvelCharacters, error, loading, charEnded} = this.state
@@ -131,6 +121,10 @@ class CharList extends Component {
             </div>
         )
     }
+}
+
+CharList.propTypes = {
+    onCharSelected: PropTypes.func.isRequired
 }
 
 export default CharList;
