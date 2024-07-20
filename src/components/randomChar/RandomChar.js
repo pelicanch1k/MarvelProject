@@ -1,5 +1,5 @@
 import {  useEffect, useState } from 'react';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 import Spinner from '../spiner/Spinner';
 import ErrorMessage from "../errorMessage/ErrorMessage"
 
@@ -9,12 +9,10 @@ import mjolnir from '../../resources/img/mjolnir.png';
 const RandomChar = () => {
     const [state, setState] = useState({
         oldChar: {},
-        char: {},
-        loading: true,
-        error: false
+        char: {}
     })
 
-    const marvelService = new MarvelService();
+    const {loading, error, getCharacter, clearError} = useMarvelService();
 
     useEffect( () => { 
         updateChar()
@@ -31,52 +29,28 @@ const RandomChar = () => {
         }
     }, [state])
 
-    const onError = () => {
-        setState(prev => ({
-            ...prev,
-            loading: false,
-            error: true 
-        }))
-    }
-
     const onCharLoaded = (char) => {
         setState(prev => ({
             ...prev,
-            char,
-            loading: false,
-            error: false
-        }))
-    }
-
-    const onCharLoading = () => {
-        setState(prev => ({
-            ...prev,
-            char: {},
-            oldChar: prev.char,
-            loading: true,
-            error: false
+            char
         }))
     }
 
     const updateChar = () => {
-        onCharLoading()
-
         const id = Math.floor(Math.random() * (1011400 - 1011410) + 1011410)
-
-        marvelService
-        .getCharacter(id)
+        
+        clearError();
+        
+        getCharacter(id)
         .then(onCharLoaded)
-        .catch(onError)
     }
-
-    const {char, loading, error} = state;
     
     const loadingMessage = loading ? <Spinner/> : null
     const errorMessage = error ? <ErrorMessage/> : null
     let content = null
 
     if (loadingMessage == null && errorMessage == null){
-        content = <View char={char}/>
+        content = <View char={state.char}/>
     }
 
     return (
@@ -105,7 +79,7 @@ const View = ({char}) => {
     const {name, description, src, homepage, wiki} = char;
     let style = {objectFit: "cover"}
 
-    if (src.indexOf("image_not_available.jpg") !== -1){
+    if (src?.indexOf("image_not_available.jpg") !== -1){
         style.objectFit = "contain"
     }
 

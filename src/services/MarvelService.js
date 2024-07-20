@@ -1,31 +1,25 @@
+import useHttp from '../hooks/http.hook';
+
+const useMarvelService = () => {
+    const {loading, request, error, clearError} = useHttp();
+
+    const _apiBase = "https://gateway.marvel.com:443/v1/public/"
+    const _apiKey = "apikey=270f82bfdb95ec7c4d5ecb38e9ea14b5"
 
 
-class MarvelService {
-    _apiBase = "https://gateway.marvel.com:443/v1/public/"
-    _apiKey = "apikey=270f82bfdb95ec7c4d5ecb38e9ea14b5"
+    const getAllCharacters = async(baseOffset) => {
+        const res = await request(`${_apiBase}characters?limit=9&offset=${baseOffset}&${_apiKey}`);
 
-    getResourse = async (url) => {
-        let res = await fetch(url);
-
-        if (!res.ok) {
-            throw new Error(`Error on ${url}`)
-        }
-
-        return await res.json();
+        return res.data.results.map(_transformCharacter)
     }
 
-    getAllCharacters = async(baseOffset) => {
-        const res = await this.getResourse(`${this._apiBase}characters?limit=9&offset=${baseOffset}&${this._apiKey}`);
-        return res.data.results.map(this._transformCharacter)
+    const getCharacter = async(id) => {
+        const res = await request(`${_apiBase}characters/${id}?${_apiKey}`);
+        return _transformCharacter(res.data.results[0])
     }
 
-    getCharacter = async(id) => {
-        const res = await this.getResourse(`${this._apiBase}characters/${id}?${this._apiKey}`);
-        return this._transformCharacter(res.data.results[0])
-    }
-
-    _transformCharacter = (char) => {
-        const description = this._checkDescription(char.description) 
+    const _transformCharacter = (char) => {
+        const description = _checkDescription(char.description) 
 
         return {
             id: char.id,
@@ -38,7 +32,7 @@ class MarvelService {
         }
     }
 
-    _checkDescription = (desc) => {
+    const _checkDescription = (desc) => {
         if (!desc.length) {
             return "Lorem ipsum dolor sit amet, consectetur adipisicing." 
         } else if (desc.length >= 100) {
@@ -47,6 +41,8 @@ class MarvelService {
             return desc
         }
     }
+
+    return {loading, error, getAllCharacters, getCharacter, clearError}
 }
 
-export default MarvelService;
+export default useMarvelService;

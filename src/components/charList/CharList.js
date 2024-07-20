@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Spinner from '../spiner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 
 import './charList.scss';
 import abyss from '../../resources/img/abyss.jpg';
@@ -12,35 +12,30 @@ import abyss from '../../resources/img/abyss.jpg';
 const CharList = (props) => {
     const [state, setState] = useState({
         marvelCharacters: [],
-        error: false,
-        loading: false,
         offset: 210,
         charEnded: false,
         refID: null,
-        oldId: null
+        oldId: null,
+        newItemLoading: false
     })
+
+    // const [newItemLoading, setNewItemLoading] = useState(false);
 
     let myRef = useRef([]);
 
-    const marvelService = new MarvelService();
+    const {loading, error, getAllCharacters} = useMarvelService();
 
     useEffect(() => {
-        onRequest()
+        onRequest(true)
     }, [])
 
-    const onRequest = useCallback(() => {
-        onCharListLoading();
+    const onRequest = (initial) => {
+        setState(prev => {
+            return {...prev, newItemLoading: initial ? false : true}
+        })
 
-        marvelService.getAllCharacters(state.offset)
+        getAllCharacters(state.offset)
         .then(onCharListLoaded)
-        .catch(onError)
-    }, [state.offset])
-
-    const onCharListLoading = () => {
-        setState( prev => ({
-            ...prev,
-            loading: true
-        }))
     }
 
     const onCharListLoaded = (newMarvelCharacters) => {
@@ -50,15 +45,10 @@ const CharList = (props) => {
             return {
                 ...prev, 
                 marvelCharacters: [...marvelCharacters, ...newMarvelCharacters],
-                loading: false,
                 offset: offset + 9,
                 charEnded: newMarvelCharacters.length < 9 ? true : false
             }
         })
-    }
-
-    const onError = () => {
-        setState(prev => ({...prev, error: true}))
     }
 
     const onCharSelected = (id) => {
@@ -103,24 +93,24 @@ const CharList = (props) => {
         }
     }
 
+    const items = state.marvelCharacters.map(createItem)
 
-    const {marvelCharacters, error, loading, charEnded} = state
-
-    if (error){
-        return <ErrorMessage/>
-    }
+    const errorMessage = error ? <ErrorMessage/> : null
+    const spinner = loading && !state.newItemLoading ? <Spinner/> : null
 
     return (
         <div className="char__list">
             <ul className="char__grid">
-                {!marvelCharacters ? <Spinner/> : marvelCharacters.map(createItem)}
+                {errorMessage}
+                {spinner}
+                {items}
             </ul>
             <button
-            className="button button__main button__long"
-            disabled={loading}
-            style={{"display": charEnded ? "none" : "block"}}
-            onClick={onRequest}>
-                <div className="inner">load more</div>
+                className="button button__main button__long"
+                disabled={loading}
+                style={{"display": state.charEnded ? "none" : "block"}}
+                onClick={() => onRequest(false)}>
+                    <div className="inner">load more</div>
             </button>
         </div>
     )
