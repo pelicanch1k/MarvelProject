@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback, useMemo, useRef} from 'react';
+import {useState, useEffect, useCallback, useMemo, useRef} from 'react';
 import PropTypes from 'prop-types';
 
 import Spinner from '../spiner/Spinner';
@@ -26,16 +26,16 @@ const CharList = (props) => {
     const {loading, error, getAllCharacters} = useMarvelService();
 
     useEffect(() => {
-        onRequest(true)
+        onRequest(false)
     }, [])
 
-    const onRequest = (initial) => {
+    const onRequest = (newItemLoading) => {
         setState(prev => {
-            return {...prev, newItemLoading: initial ? false : true}
+            return {...prev, newItemLoading}
         })
 
         getAllCharacters(state.offset)
-        .then(onCharListLoaded)
+            .then(onCharListLoaded)
     }
 
     const onCharListLoaded = (newMarvelCharacters) => {
@@ -109,7 +109,7 @@ const CharList = (props) => {
                 className="button button__main button__long"
                 disabled={loading}
                 style={{"display": state.charEnded ? "none" : "block"}}
-                onClick={() => onRequest(false)}>
+                onClick={() => onRequest(true)}>
                     <div className="inner">load more</div>
             </button>
         </div>
